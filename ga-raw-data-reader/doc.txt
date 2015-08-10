@@ -1,0 +1,2 @@
+how to get many data from GA for machine learning : http://www.yourcloudbuddy.com/2015/03/machine-learning-using-your-google-analytics-data-for-prediction.html
+Core Reporting API doc : https://developers.google.com/analytics/devguides/reporting/core/v3/
