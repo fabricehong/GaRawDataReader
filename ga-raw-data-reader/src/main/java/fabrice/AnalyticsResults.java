@@ -11,12 +11,12 @@ import java.util.*;
 /**
  * Created by fabrice on 10.08.15.
  */
-public class Result {
+public class AnalyticsResults {
     private GaData gaData;
     private TreeMap<Long, Row> rows;
     private GlobalCsvColumnIndex globalCsvColumnIndex;
 
-    public Result() {
+    public AnalyticsResults() {
         this.globalCsvColumnIndex = new GlobalCsvColumnIndex();
         this.rows = new TreeMap<Long, Row>();
     }
