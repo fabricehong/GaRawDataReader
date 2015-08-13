@@ -3,40 +3,37 @@ package fabrice;
 import com.google.api.services.analytics.model.GaData;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.Sets;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 /**
  * Created by fabrice on 10.08.15.
  */
 public class AnalyticsResults {
-    private GaData gaData;
-    private TreeMap<Long, Row> rows;
+    private TreeMap<Long, AnalyticsRow> rows;
     private GlobalCsvColumnIndex globalCsvColumnIndex;
 
     public AnalyticsResults() {
         this.globalCsvColumnIndex = new GlobalCsvColumnIndex();
-        this.rows = new TreeMap<Long, Row>();
+        this.rows = new TreeMap<Long, AnalyticsRow>();
     }
 
     public void addAllAbsent(GaData gaData) {
         for (List<String> row : gaData.getRows()) {
-            addRow(new Row(gaData.getColumnHeaders(), row, globalCsvColumnIndex));
+            addRow(new AnalyticsRow(gaData.getColumnHeaders(), row, globalCsvColumnIndex));
         }
     }
 
-    private void addRow(Row row) {
-        Row rowInMap = this.rows.get(row.getTime());
-        if (rowInMap==null) {
-            this.rows.put(row.getTime(), row);
+    private void addRow(AnalyticsRow AnalyticsRow) {
+        AnalyticsRow analyticsRowInMap = this.rows.get(AnalyticsRow.getTime());
+        if (analyticsRowInMap ==null) {
+            this.rows.put(AnalyticsRow.getTime(), AnalyticsRow);
         } else {
-            rowInMap.addAllAbsent(row);
+            analyticsRowInMap.addAllAbsent(AnalyticsRow);
         }
     }
 
-    public TreeMap<Long, Row> getRows() {
+    public TreeMap<Long, AnalyticsRow> getRows() {
         return rows;
     }
 
@@ -47,8 +44,8 @@ public class AnalyticsResults {
 
     public CsvContent createCsvContent() {
         final GaData.ColumnHeaders[] headers = this.globalCsvColumnIndex.getHeaders();
-        Collection<String[]> csvRows = Collections2.transform(this.rows.entrySet(), new Function<Map.Entry<Long, Row>, String[]>() {
-            public String[] apply(final Map.Entry<Long, Row> longRowEntry) {
+        Collection<String[]> csvRows = Collections2.transform(this.rows.entrySet(), new Function<Map.Entry<Long, AnalyticsRow>, String[]>() {
+            public String[] apply(final Map.Entry<Long, AnalyticsRow> longRowEntry) {
                 String[] row = new String[headers.length];
                 for (GaData.ColumnHeaders header : headers) {
                     row[globalCsvColumnIndex.getHeaderIndex(header)] = CsvUtils.escape(longRowEntry.getValue().getValue(header));

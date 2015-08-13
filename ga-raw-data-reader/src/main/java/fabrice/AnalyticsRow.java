@@ -9,14 +9,12 @@ import java.util.List;
 /**
  * Created by fabrice on 10.08.15.
  */
-public class Row {
+public class AnalyticsRow {
     public static final String GA_NTH_MINUTE = "ga:nthMinute";
-    private final GlobalCsvColumnIndex globalCsvColumnIndex;
     private Long time;
     private LinkedHashMap<GaData.ColumnHeaders, String> columnValues;
 
-    public Row(List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) {
-        this.globalCsvColumnIndex = globalCsvColumnIndex;
+    public AnalyticsRow(List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) {
         if (columnHeaders.size()<1) {
             throw new RuntimeException(String.format("Provided column header should be at least of size 1. Size of the one provided : %s", columnHeaders.size()));
         }
@@ -35,17 +33,13 @@ public class Row {
         }
     }
 
-    public LinkedHashMap<GaData.ColumnHeaders, String> getValues() {
-        return this.columnValues;
-    }
-
     public Long getTime() {
         return time;
     }
 
-    public void addAllAbsent(Row row) {
-        for (GaData.ColumnHeaders header : row.getColumnHeaders()) {
-            setIfNotExist(header, row.getValue(header));
+    public void addAllAbsent(AnalyticsRow AnalyticsRow) {
+        for (GaData.ColumnHeaders header : AnalyticsRow.getColumnHeaders()) {
+            setIfNotExist(header, AnalyticsRow.getValue(header));
         }
     }
 
