@@ -8,4 +8,8 @@ public class TechnicalException extends RuntimeException {
 	public TechnicalException(Throwable e) {
 		super(e);
 	}
+
+	public TechnicalException(String message) {
+		super(message);
+	}
 }

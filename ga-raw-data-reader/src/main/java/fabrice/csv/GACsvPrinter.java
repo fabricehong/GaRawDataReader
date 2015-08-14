@@ -1,4 +1,4 @@
-package fabrice;
+package fabrice.csv;
 
 import org.apache.commons.csv.CSVFormat;
 

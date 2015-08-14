@@ -1,4 +1,4 @@
-package fabrice;
+package fabrice.analytics;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
@@ -18,6 +18,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import fabrice.exceptions.TechnicalException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -29,53 +31,64 @@ import java.util.Iterator;
 import java.util.List;
 
 public class AnalyticsReader {
+	protected Logger logger;
+
 	private final String APPLICATION_NAME = "Hello Analytics";
 	private final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 	private final String secretKeyFileLocation;
 	private final String serviceAccountEmail;
 	private Analytics analytics;
 	private String profileId;
+    private IdDefinition idDefinition;
 
-	public AnalyticsReader(String serviceAccountEmail, String secretKeyFileLocation) {
-		this.secretKeyFileLocation = secretKeyFileLocation;
-		this.serviceAccountEmail = serviceAccountEmail;
-		analytics = initializeAnalytics();
-		profileId = getFirstProfileId(analytics);
-	}
+    public AnalyticsReader(String serviceAccountEmail, String secretKeyFileLocation) {
+		this.logger = LoggerFactory.getLogger(getClass());
+        this.secretKeyFileLocation = secretKeyFileLocation;
+        this.serviceAccountEmail = serviceAccountEmail;
+        analytics = initializeAnalytics();
+        profileId = getFirstProfileId(analytics);
+        idDefinition = new IdDefinition();
+    }
 
 	public AnalyticsResults readAnalyticsResults(String[] dimensions, String dateStart, String dateEnd) {
 		Iterator<String> partitionedDimensions = getPartitionedDimensions(dimensions);
 		int i = 0;
-		AnalyticsResults analyticsResults = new AnalyticsResults();
+
+        AnalyticsResults analyticsResults = new AnalyticsResults(idDefinition);
+        int reportNumber = 0;
 		while (partitionedDimensions.hasNext()) {
 			String next = partitionedDimensions.next();
-			System.out.println("RAPPORT " + i++);
+			this.logger.info("RAPPORT " + i++);
 			GaData results = getResultsForMax7Dimensions(next, dateStart, dateEnd);
 			printResults(results);
 			analyticsResults.addAllAbsent(results);
+            reportNumber++;
 		}
+        this.logger.info(String.format("There was %s reports merged", reportNumber));
 		return analyticsResults;
 	}
 
 	private void printResults(GaData results) {
-		// Parse the response from the Core Reporting API for
-		// the profile name and number of sessions.
-		if (results != null && !results.getRows().isEmpty()) {
-			System.out.println("View (Profile) Name: "
-					+ results.getProfileInfo().getProfileName());
-			Collection<String> rowsStr = Collections2.transform(results.getRows(), new Function<List<String>, String>() {
-				@Override
-				public String apply(List<String> strings) {
-					return Joiner.on(", ").join(strings);
-				}
-			});
-			String join = Joiner.on("\n").join(rowsStr);
-			System.out.println(join);
+        if (this.logger.isDebugEnabled()) {
+            // Parse the response from the Core Reporting API for
+            // the profile name and number of sessions.
+            if (results != null && !results.getRows().isEmpty()) {
+                this.logger.debug("View (Profile) Name: "
+                        + results.getProfileInfo().getProfileName());
+                Collection<String> rowsStr = Collections2.transform(results.getRows(), new Function<List<String>, String>() {
+                    @Override
+                    public String apply(List<String> strings) {
+                        return Joiner.on(", ").join(strings);
+                    }
+                });
+                String join = Joiner.on("\n").join(rowsStr);
+                this.logger.debug(join);
 
-			System.out.println("Total Rows: " + results.getRows().size());
-		} else {
-			System.out.println("No results found");
-		}
+                this.logger.debug("Total Rows: " + results.getRows().size());
+            } else {
+                this.logger.debug("No results found");
+            }
+        }
 	}
 	private Iterator<String> getPartitionedDimensions(String... dimensions) {
 		UnmodifiableIterator<List<String>> partition = Iterators.partition(Arrays.asList(dimensions).iterator(), 6);
@@ -98,15 +111,18 @@ public class AnalyticsReader {
 					.get("ga:" + profileId, dateStart, dateEnd, "ga:sessions");
 
 			today.setDimensions(dimensions);
-			System.out.println(today.getDimensions());
-			return today
-					.execute();
+			this.logger.info(String.format("getting data (max 7 dimensions) for dimensions : %s", today.getDimensions()));
+			return executeRequest(today);
 		} catch (IOException e) {
 			throw new TechnicalException(e);
 		}
 	}
 
-	public String getProfileId() {
+    private GaData executeRequest(Analytics.Data.Ga.Get today) throws IOException {
+        return today.execute();
+    }
+
+    public String getProfileId() {
 		return profileId;
 	}
 

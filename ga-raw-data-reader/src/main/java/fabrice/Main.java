@@ -1,6 +1,9 @@
 package fabrice;
 
 
+import fabrice.analytics.AnalyticsReader;
+import fabrice.analytics.AnalyticsResults;
+import fabrice.csv.GACsvPrinter;
 import fabrice.exceptions.TechnicalException;
 
 import java.io.FileWriter;

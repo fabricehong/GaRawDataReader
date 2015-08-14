@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package fabrice;
+package fabrice.csv;
 
 import org.apache.commons.csv.CSVFormat;
 

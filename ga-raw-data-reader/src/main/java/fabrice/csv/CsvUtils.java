@@ -1,4 +1,4 @@
-package fabrice;
+package fabrice.csv;
 
 /**
  * Created by fabrice on 10.08.15.

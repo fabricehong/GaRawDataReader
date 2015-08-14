@@ -1,4 +1,4 @@
-package fabrice;
+package fabrice.csv;
 
 import java.util.Collection;
 
@@ -9,7 +9,7 @@ public class CsvContent {
     private Collection<String> headers;
     private Collection<String[]> content;
 
-    CsvContent(Collection<String> headers, Collection<String[]> content) {
+    public CsvContent(Collection<String> headers, Collection<String[]> content) {
         this.headers = headers;
         this.content = content;
 

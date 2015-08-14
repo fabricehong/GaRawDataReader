@@ -1,4 +1,4 @@
-package fabrice;
+package fabrice.csv;
 
 import com.google.api.services.analytics.model.GaData;
 
