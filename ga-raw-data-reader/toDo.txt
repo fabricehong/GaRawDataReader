@@ -1,1 +1,10 @@
 - make very sure that merging data is something consistent !
+
+before data gathering :
+ - arrange id dimensions at the befinning of the columns, in a deterministric order
+ - detect duplicate dimension between id and asked dimension
+ - throw error or duplicate asked dimension
+
+when creating the GaRow :
+ - define canBeConsideredAsData():
+    - yes : initially asked as a dimension

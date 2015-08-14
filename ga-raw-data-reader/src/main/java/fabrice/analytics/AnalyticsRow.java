@@ -14,20 +14,21 @@ import java.util.Map;
  */
 public class AnalyticsRow {
     public static final String GA_NTH_MINUTE = "ga:nthMinute";
-    private RowId time;
-    private LinkedHashMap<GaData.ColumnHeaders, String> columnValues;
-    private Integer sessionNumber;
-    private IdDefinition idDefinition;
 
-    public static AnalyticsRow create(IdDefinition idDefinition, List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
-        AnalyticsRow analyticsRow = new AnalyticsRow(idDefinition);
+    private LinkedHashMap<GaData.ColumnHeaders, String> columnValues;
+    private RowDefinition rowDefinition;
+    private int sessionNumber;
+    private Infos rowId;
+
+    public static AnalyticsRow create(RowDefinition rowDefinition, List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
+        AnalyticsRow analyticsRow = new AnalyticsRow(rowDefinition);
         analyticsRow.initialize(columnHeaders, row, globalCsvColumnIndex);
         return analyticsRow;
     }
 
-    private AnalyticsRow(IdDefinition idDefinition) {
+    private AnalyticsRow(RowDefinition rowDefinition) {
 
-        this.idDefinition = idDefinition;
+        this.rowDefinition = rowDefinition;
     }
 
     private void initialize(List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
@@ -37,18 +38,27 @@ public class AnalyticsRow {
             throw new InvalidRowException("Not the same : " + Joiner.on(",").join(columnHeaders) + " (col. headers), " + Joiner.on(",").join(row) + " (row)");
         }
 
+        RowIdCollector rowInformationCollector = rowDefinition.createRowInformationCollector();
+        RowIdCollector rowIdCollector = rowDefinition.createRowIdCollector();
 
-        this.time = Long.parseLong(row.get(0));
         for (int i=1; i<columnHeaders.size(); i++) {
             GaData.ColumnHeaders header = columnHeaders.get(i);
             String value = row.get(i);
-            if ("ga:sessions".equals(header.getName())) {
-                this.sessionNumber = Integer.parseInt(value);
-            } else {
+            rowInformationCollector.collect(header, value);
+            rowIdCollector.collect(header, value);
+            if (rowDefinition.isHeaderAllowedInCsv(header)) {
                 globalCsvColumnIndex.newHeader(header);
                 this.columnValues.put(header, value);
             }
         }
+
+        Infos infos = rowInformationCollector.create();
+        sessionNumber = Integer.parseInt(infos.getHeaderValue(GaHeader.GA_SESSIONS));
+        this.rowId = rowIdCollector.create();
+    }
+
+    boolean canBeConsideredAsData(RowDefinition rowDefinition, GaData.ColumnHeaders header) {
+
     }
 
     private void checkForGA_NT_MINUTE(List<GaData.ColumnHeaders> columnHeaders) {
@@ -60,8 +70,8 @@ public class AnalyticsRow {
         }
     }
 
-    public Long getId() {
-        return time;
+    public Infos getId() {
+        return rowId;
     }
 
     public void addAllAbsent(AnalyticsRow AnalyticsRow) {
@@ -94,7 +104,7 @@ public class AnalyticsRow {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         sb.append("[");
-        sb.append(String.format("id=%s, ", time));
+        sb.append(String.format("id=%s, ", rowId));
         sb.append(String.format("sessions nb=%s, ", sessionNumber));
         sb.append("data=");
         sb.append("{");

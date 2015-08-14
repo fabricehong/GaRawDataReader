@@ -18,15 +18,15 @@ import java.util.*;
 public class AnalyticsResults {
 
     protected Logger logger;
-    private TreeMap<Long, AnalyticsRow> rows;
+    private TreeMap<Infos, AnalyticsRow> rows;
     private GlobalCsvColumnIndex globalCsvColumnIndex;
-    private IdDefinition idDefinition;
+    private RowDefinition rowDefinition;
 
-    public AnalyticsResults(IdDefinition idDefinition) {
-        this.idDefinition = idDefinition;
+    public AnalyticsResults(RowDefinition rowDefinition) {
+        this.rowDefinition = rowDefinition;
         this.logger = LoggerFactory.getLogger(getClass());
         this.globalCsvColumnIndex = new GlobalCsvColumnIndex();
-        this.rows = new TreeMap<Long, AnalyticsRow>();
+        this.rows = new TreeMap<Infos, AnalyticsRow>();
     }
 
     public void addAllAbsent(GaData gaData) {
@@ -34,7 +34,7 @@ public class AnalyticsResults {
             AnalyticsRow analyticsRow = null;
             try {
 
-                analyticsRow = AnalyticsRow.create(idDefinition, gaData.getColumnHeaders(), row, globalCsvColumnIndex);
+                analyticsRow = AnalyticsRow.create(rowDefinition, gaData.getColumnHeaders(), row, globalCsvColumnIndex);
             } catch (InvalidRowException e) {
                 this.logger.debug(String.format("Impossible to construct row '%s'", row), e);
                 continue;
@@ -66,7 +66,7 @@ public class AnalyticsResults {
         }
     }
 
-    public TreeMap<Long, AnalyticsRow> getRows() {
+    public TreeMap<Infos, AnalyticsRow> getRows() {
         return rows;
     }
 
@@ -77,8 +77,8 @@ public class AnalyticsResults {
 
     public CsvContent createCsvContent() {
         final GaData.ColumnHeaders[] headers = this.globalCsvColumnIndex.getHeaders();
-        Collection<String[]> csvRows = Collections2.transform(this.rows.entrySet(), new Function<Map.Entry<Long, AnalyticsRow>, String[]>() {
-            public String[] apply(final Map.Entry<Long, AnalyticsRow> longRowEntry) {
+        Collection<String[]> csvRows = Collections2.transform(this.rows.entrySet(), new Function<Map.Entry<Infos, AnalyticsRow>, String[]>() {
+            public String[] apply(final Map.Entry<Infos, AnalyticsRow> longRowEntry) {
                 String[] resultRow = new String[headers.length];
                 for (GaData.ColumnHeaders header : headers) {
                     AnalyticsRow gaRow = longRowEntry.getValue();

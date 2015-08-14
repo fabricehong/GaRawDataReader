@@ -25,12 +25,17 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class AnalyticsReader {
+	public static final String GA_NTH_MINUTE_HEADER = "ga:nthMinute";
+
+	public static final RowDefinition1 ROW_DEFINITION = new RowDefinition1();
+	public static final int GA_MAX_DIMENSIONS = 7;
+
 	protected Logger logger;
 
 	private final String APPLICATION_NAME = "Hello Analytics";
@@ -39,7 +44,7 @@ public class AnalyticsReader {
 	private final String serviceAccountEmail;
 	private Analytics analytics;
 	private String profileId;
-    private IdDefinition idDefinition;
+    private RowDefinition rowDefinition;
 
     public AnalyticsReader(String serviceAccountEmail, String secretKeyFileLocation) {
 		this.logger = LoggerFactory.getLogger(getClass());
@@ -47,19 +52,19 @@ public class AnalyticsReader {
         this.serviceAccountEmail = serviceAccountEmail;
         analytics = initializeAnalytics();
         profileId = getFirstProfileId(analytics);
-        idDefinition = new IdDefinition();
+        rowDefinition = ROW_DEFINITION;
     }
 
 	public AnalyticsResults readAnalyticsResults(String[] dimensions, String dateStart, String dateEnd) {
-		Iterator<String> partitionedDimensions = getPartitionedDimensions(dimensions);
+		Iterator<String> partitionedDimensions = getPartitionedValidDimensions(dimensions);
 		int i = 0;
 
-        AnalyticsResults analyticsResults = new AnalyticsResults(idDefinition);
+        AnalyticsResults analyticsResults = new AnalyticsResults(rowDefinition);
         int reportNumber = 0;
 		while (partitionedDimensions.hasNext()) {
-			String next = partitionedDimensions.next();
+			String dimStr = partitionedDimensions.next();
 			this.logger.info("RAPPORT " + i++);
-			GaData results = getResultsForMax7Dimensions(next, dateStart, dateEnd);
+			GaData results = getResultsForMax7Dimensions(dimStr, dateStart, dateEnd);
 			printResults(results);
 			analyticsResults.addAllAbsent(results);
             reportNumber++;
@@ -90,13 +95,30 @@ public class AnalyticsReader {
             }
         }
 	}
-	private Iterator<String> getPartitionedDimensions(String... dimensions) {
-		UnmodifiableIterator<List<String>> partition = Iterators.partition(Arrays.asList(dimensions).iterator(), 6);
+
+	private Iterator<String> getPartitionedValidDimensions(String... dimensions) {
+		arrange id dimensions at the befinning of the columns, in a deterministric order
+				- detect duplicate dimension between id and asked dimension
+				
+		LinkedHashSet<String> askedDimensions = new LinkedHashSet<String>();
+		for (String dimension : dimensions) {
+			if (askedDimensions.contains(dimension)) {
+				throw new TechnicalException(String.format("You can't specify two time the dimension '%s'. Asked dimensions : %s", dimension, dimensions));
+			}
+			askedDimensions.add(dimension);
+		}
+
+
+		UnmodifiableIterator<List<String>> partition = Iterators.partition(askedDimensions.iterator(), GA_MAX_DIMENSIONS -rowDefinition.getIdSize());
 		Iterator<String> transform = Iterators.transform(partition, new Function<List<String>, String>() {
 			@Nullable
 			@Override
 			public String apply(@Nullable List<String> strings) {
-				ImmutableList<Object> list = ImmutableList.builder().add("ga:nthMinute").addAll(strings).build();
+				ImmutableList.Builder<Object> builder = ImmutableList.builder();
+				for (String header : rowDefinition.getIdHeaders()) {
+					builder.add(header);
+				}
+				ImmutableList<Object> list = builder.addAll(strings).build();
 				return Joiner.on(",").join(list);
 			}
 		});
