@@ -1,8 +1,9 @@
-package fabrice.analytics;
+package fabrice.domain;
 
 import com.google.api.services.analytics.model.GaData;
 import com.google.common.base.Function;
 import com.google.common.collect.Collections2;
+import fabrice.analytics.RequestedDimensions;
 import fabrice.csv.CsvContent;
 import fabrice.csv.CsvUtils;
 import fabrice.csv.GlobalCsvColumnIndex;
@@ -20,10 +21,10 @@ public class AnalyticsResults {
     protected Logger logger;
     private TreeMap<Infos, AnalyticsRow> rows;
     private GlobalCsvColumnIndex globalCsvColumnIndex;
-    private RowDefinition rowDefinition;
+    private RequestedDimensions requestedDimensions;
 
-    public AnalyticsResults(RowDefinition rowDefinition) {
-        this.rowDefinition = rowDefinition;
+    public AnalyticsResults(RequestedDimensions requestedDimensions) {
+        this.requestedDimensions = requestedDimensions;
         this.logger = LoggerFactory.getLogger(getClass());
         this.globalCsvColumnIndex = new GlobalCsvColumnIndex();
         this.rows = new TreeMap<Infos, AnalyticsRow>();
@@ -33,8 +34,7 @@ public class AnalyticsResults {
         for (List<String> row : gaData.getRows()) {
             AnalyticsRow analyticsRow = null;
             try {
-
-                analyticsRow = AnalyticsRow.create(rowDefinition, gaData.getColumnHeaders(), row, globalCsvColumnIndex);
+                analyticsRow = AnalyticsRow.create(requestedDimensions, gaData.getColumnHeaders(), row, globalCsvColumnIndex);
             } catch (InvalidRowException e) {
                 this.logger.debug(String.format("Impossible to construct row '%s'", row), e);
                 continue;

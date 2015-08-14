@@ -1,8 +1,8 @@
-package fabrice;
+package fabrice.app;
 
 
 import fabrice.analytics.AnalyticsReader;
-import fabrice.analytics.AnalyticsResults;
+import fabrice.domain.AnalyticsResults;
 import fabrice.csv.GACsvPrinter;
 import fabrice.exceptions.TechnicalException;
 

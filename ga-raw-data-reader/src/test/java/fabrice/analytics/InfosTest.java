@@ -1,6 +1,7 @@
 package fabrice.analytics;
 
 import com.google.common.collect.ImmutableMap;
+import fabrice.domain.Infos;
 import org.junit.Assert;
 import org.junit.Test;
 

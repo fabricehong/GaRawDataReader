@@ -1,4 +1,4 @@
-package fabrice.analytics;
+package fabrice.domain;
 
 /**
  * @author Fabrice Hong -- Liip AG

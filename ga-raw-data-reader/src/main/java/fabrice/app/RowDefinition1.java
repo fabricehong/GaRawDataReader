@@ -1,4 +1,7 @@
-package fabrice.analytics;
+package fabrice.app;
+
+import fabrice.domain.GaHeader;
+import fabrice.domain.RowDefinition;
 
 /**
  * Created by fabrice on 14.08.15.

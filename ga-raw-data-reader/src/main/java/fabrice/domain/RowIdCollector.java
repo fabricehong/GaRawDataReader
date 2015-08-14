@@ -1,8 +1,9 @@
-package fabrice.analytics;
+package fabrice.domain;
 
 import com.google.api.services.analytics.model.GaData;
 import fabrice.exceptions.InvalidRowException;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +13,7 @@ import java.util.Map;
  */
 public class RowIdCollector {
 	private Map<String, String> collectedValues;
-	public RowIdCollector(String[] gaHeaders) {
+	public RowIdCollector(Collection<String> gaHeaders) {
 		this.collectedValues = new HashMap<String, String>();
 		for (String header : gaHeaders) {
 			this.collectedValues.put(header, null);

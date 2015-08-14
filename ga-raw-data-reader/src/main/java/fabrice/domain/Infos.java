@@ -1,4 +1,4 @@
-package fabrice.analytics;
+package fabrice.domain;
 
 import java.util.HashMap;
 import java.util.Map;

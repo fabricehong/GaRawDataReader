@@ -1,7 +1,8 @@
-package fabrice.analytics;
+package fabrice.domain;
 
 import com.google.api.services.analytics.model.GaData;
 import com.google.common.base.Joiner;
+import fabrice.analytics.RequestedDimensions;
 import fabrice.csv.GlobalCsvColumnIndex;
 import fabrice.exceptions.InvalidRowException;
 
@@ -13,15 +14,14 @@ import java.util.Map;
  * Created by fabrice on 10.08.15.
  */
 public class AnalyticsRow {
-    public static final String GA_NTH_MINUTE = "ga:nthMinute";
 
     private LinkedHashMap<GaData.ColumnHeaders, String> columnValues;
     private RowDefinition rowDefinition;
     private int sessionNumber;
     private Infos rowId;
 
-    public static AnalyticsRow create(RowDefinition rowDefinition, List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
-        AnalyticsRow analyticsRow = new AnalyticsRow(rowDefinition);
+    public static AnalyticsRow create(RequestedDimensions requestedDimensions, List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
+        AnalyticsRow analyticsRow = new AnalyticsRow(requestedDimensions.getRowDefinition());
         analyticsRow.initialize(columnHeaders, row, globalCsvColumnIndex);
         return analyticsRow;
     }
@@ -32,7 +32,6 @@ public class AnalyticsRow {
     }
 
     private void initialize(List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
-        checkForGA_NT_MINUTE(columnHeaders);
         this.columnValues = new LinkedHashMap<GaData.ColumnHeaders, String>();
         if (columnHeaders.size()!=row.size()) {
             throw new InvalidRowException("Not the same : " + Joiner.on(",").join(columnHeaders) + " (col. headers), " + Joiner.on(",").join(row) + " (row)");
@@ -58,17 +57,10 @@ public class AnalyticsRow {
     }
 
     boolean canBeConsideredAsData(RowDefinition rowDefinition, GaData.ColumnHeaders header) {
-
+        return false;
     }
 
-    private void checkForGA_NT_MINUTE(List<GaData.ColumnHeaders> columnHeaders) {
-        if (columnHeaders.size()<1) {
-            throw new RuntimeException(String.format("Provided column header should be at least of size 1. Size of the one provided : %s", columnHeaders.size()));
-        }
-        if (!columnHeaders.get(0).getName().equals(GA_NTH_MINUTE)) {
-            throw new RuntimeException(String.format("The first column header should be '%s'. Provided column headers : %s", GA_NTH_MINUTE, Joiner.on(", ").join(columnHeaders)));
-        }
-    }
+
 
     public Infos getId() {
         return rowId;

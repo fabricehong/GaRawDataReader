@@ -14,20 +14,18 @@ import com.google.api.services.analytics.model.Webproperties;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.UnmodifiableIterator;
+import fabrice.app.RowDefinition1;
+import fabrice.domain.AnalyticsResults;
+import fabrice.domain.RowDefinition;
 import fabrice.exceptions.TechnicalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 public class AnalyticsReader {
@@ -56,10 +54,11 @@ public class AnalyticsReader {
     }
 
 	public AnalyticsResults readAnalyticsResults(String[] dimensions, String dateStart, String dateEnd) {
-		Iterator<String> partitionedDimensions = getPartitionedValidDimensions(dimensions);
+		RequestedDimensions requestedDimensions = new RequestedDimensions(rowDefinition, GA_MAX_DIMENSIONS, dimensions);
+		Iterator<String> partitionedDimensions = requestedDimensions.getPartitionedValidDimensions();
 		int i = 0;
 
-        AnalyticsResults analyticsResults = new AnalyticsResults(rowDefinition);
+        AnalyticsResults analyticsResults = new AnalyticsResults(requestedDimensions);
         int reportNumber = 0;
 		while (partitionedDimensions.hasNext()) {
 			String dimStr = partitionedDimensions.next();
@@ -94,35 +93,6 @@ public class AnalyticsReader {
                 this.logger.debug("No results found");
             }
         }
-	}
-
-	private Iterator<String> getPartitionedValidDimensions(String... dimensions) {
-		arrange id dimensions at the befinning of the columns, in a deterministric order
-				- detect duplicate dimension between id and asked dimension
-				
-		LinkedHashSet<String> askedDimensions = new LinkedHashSet<String>();
-		for (String dimension : dimensions) {
-			if (askedDimensions.contains(dimension)) {
-				throw new TechnicalException(String.format("You can't specify two time the dimension '%s'. Asked dimensions : %s", dimension, dimensions));
-			}
-			askedDimensions.add(dimension);
-		}
-
-
-		UnmodifiableIterator<List<String>> partition = Iterators.partition(askedDimensions.iterator(), GA_MAX_DIMENSIONS -rowDefinition.getIdSize());
-		Iterator<String> transform = Iterators.transform(partition, new Function<List<String>, String>() {
-			@Nullable
-			@Override
-			public String apply(@Nullable List<String> strings) {
-				ImmutableList.Builder<Object> builder = ImmutableList.builder();
-				for (String header : rowDefinition.getIdHeaders()) {
-					builder.add(header);
-				}
-				ImmutableList<Object> list = builder.addAll(strings).build();
-				return Joiner.on(",").join(list);
-			}
-		});
-		return transform;
 	}
 
 	private GaData getResultsForMax7Dimensions(String dimensions, String dateStart, String dateEnd) {
