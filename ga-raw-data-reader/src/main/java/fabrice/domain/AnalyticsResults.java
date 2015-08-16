@@ -23,9 +23,11 @@ public class AnalyticsResults {
     private LinkedHashMap<Infos, AnalyticsRow> rows;
     private GlobalCsvColumnIndex globalCsvColumnIndex;
     private RequestedDimensions requestedDimensions;
+    private final Statistics statistics;
 
-    public AnalyticsResults(RequestedDimensions requestedDimensions) {
+    public AnalyticsResults(RequestedDimensions requestedDimensions, Statistics statistics) {
         this.requestedDimensions = requestedDimensions;
+        this.statistics = statistics;
         this.logger = LoggerFactory.getLogger(getClass());
         this.globalCsvColumnIndex = new GlobalCsvColumnIndex();
         this.rows = new LinkedHashMap<Infos, AnalyticsRow>();
@@ -39,8 +41,8 @@ public class AnalyticsResults {
                 analyticsRow = AnalyticsRow.create(requestedDimensions, gaData.getColumnHeaders(), row, globalCsvColumnIndex);
                 addRow(analyticsRow, idMustExist);
             } catch (InvalidRowException e) {
-                String rowStr = analyticsRow != null ? analyticsRow.toString() : row.toString();
-                this.logger.debug(String.format("Impossible to add row '%s'", rowStr), e);
+                String rowStr = analyticsRow!=null?analyticsRow.getId().toString():row.toString();
+                statistics.rowWithoutId(rowStr);
                 continue;
             }
         }
@@ -50,7 +52,7 @@ public class AnalyticsResults {
         AnalyticsRow analyticsRowInMap = this.rows.get(analyticsRow.getId());
         if (analyticsRowInMap ==null) {
             if (idMustExist) {
-                throw new TechnicalException(String.format("Unknown row id : %s", analyticsRow.getId()));
+                throw new InvalidRowException(String.format("Unknown row id : %s", analyticsRow.getId()));
             } else {
                 this.rows.put(analyticsRow.getId(), analyticsRow);
             }
@@ -66,12 +68,18 @@ public class AnalyticsResults {
                 String[] resultRow = new String[headers.length];
                 for (GaData.ColumnHeaders header : headers) {
                     AnalyticsRow gaRow = longRowEntry.getValue();
-                    resultRow[globalCsvColumnIndex.getHeaderIndex(header)] = CsvUtils.escape(gaRow.getValue(header));
+                    String value = gaRow.getValue(header);
+                    if (value == null) {
+                        statistics.incrementNbIncompleteRows();
+                        value = "";
+                    }
+                    resultRow[globalCsvColumnIndex.getHeaderIndex(header)] = CsvUtils.escape(value);
                 }
 
                 return resultRow;
             }
         });
+
         Collection<String> headerStrings = Collections2.transform(Arrays.asList(headers), new Function<GaData.ColumnHeaders, String>() {
             public String apply(GaData.ColumnHeaders columnHeaders) {
                 return CsvUtils.escape(columnHeaders.getName());

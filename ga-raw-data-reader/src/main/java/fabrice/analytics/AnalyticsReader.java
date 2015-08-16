@@ -17,6 +17,7 @@ import com.google.common.collect.Collections2;
 import fabrice.app.RowDefinition1;
 import fabrice.domain.AnalyticsResults;
 import fabrice.domain.RowDefinition;
+import fabrice.domain.Statistics;
 import fabrice.exceptions.TechnicalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,17 +59,18 @@ public class AnalyticsReader {
 		Iterator<String> partitionedDimensions = requestedDimensions.getPartitionedDimensions();
 		int i = 0;
 
-        AnalyticsResults analyticsResults = new AnalyticsResults(requestedDimensions);
-        int reportNumber = 0;
+        Statistics statistics = new Statistics();
+        AnalyticsResults analyticsResults = new AnalyticsResults(requestedDimensions, statistics);
 		while (partitionedDimensions.hasNext()) {
 			String dimStr = partitionedDimensions.next();
 			this.logger.info("RAPPORT " + i++);
 			GaData results = getResultsForMax7Dimensions(dimStr, dateStart, dateEnd);
 			printResults(results);
 			analyticsResults.addAllAbsent(results);
-            reportNumber++;
+            statistics.incrementGaRequestNb();
 		}
-        this.logger.info(String.format("There was %s reports merged", reportNumber));
+
+        this.logger.info(statistics.toString());
 		return analyticsResults;
 	}
 
@@ -79,13 +81,20 @@ public class AnalyticsReader {
             if (results != null && !results.getRows().isEmpty()) {
                 this.logger.debug("View (Profile) Name: "
                         + results.getProfileInfo().getProfileName());
-                Collection<String> rowsStr = Collections2.transform(results.getRows(), new Function<List<String>, String>() {
+				String headers = Joiner.on(", ").join(Collections2.transform(results.getColumnHeaders(), new Function<GaData.ColumnHeaders, String>() {
+					@Override
+					public String apply(GaData.ColumnHeaders strings) {
+						return strings.getName();
+					}
+				}));
+				this.logger.debug(String.format("Headers: %s", headers));
+				Collection<String> rowsStr = Collections2.transform(results.getRows(), new Function<List<String>, String>() {
                     @Override
                     public String apply(List<String> strings) {
                         return Joiner.on(", ").join(strings);
                     }
                 });
-                String join = Joiner.on("\n").join(rowsStr);
+                String join = "\n" + Joiner.on("\n").join(rowsStr);
                 this.logger.debug(join);
 
                 this.logger.debug("Total Rows: " + results.getRows().size());

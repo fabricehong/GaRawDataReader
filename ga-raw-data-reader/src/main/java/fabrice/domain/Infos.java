@@ -1,5 +1,6 @@
 package fabrice.domain;
 
+import com.google.common.base.Joiner;
 import fabrice.app.GaHeader;
 
 import java.util.HashMap;
@@ -16,5 +17,10 @@ public class Infos extends HashMap<String, String> {
 
 	public String getHeaderValue(GaHeader header) {
 		return get(header.getHeaderCode());
+	}
+
+	@Override
+	public String toString() {
+		return Joiner.on("|").withKeyValueSeparator(":").join(this);
 	}
 }

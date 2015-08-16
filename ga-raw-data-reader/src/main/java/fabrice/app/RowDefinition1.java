@@ -7,7 +7,8 @@ import fabrice.domain.RowDefinition;
  */
 public class RowDefinition1 extends RowDefinition {
 	private static String[] idHeaders = new String[]{
-			GaHeader.GA_NTH_MINUTE.getHeaderCode()
+			GaHeader.GA_NTH_MINUTE.getHeaderCode(),
+			GaHeader.GA_SESSIONS.getHeaderCode()
 //			GaHeader.GA_REGION.getHeaderCode()
 	};
 
