@@ -4,6 +4,7 @@ import com.google.api.services.analytics.model.GaData;
 import com.google.common.base.Joiner;
 import fabrice.analytics.AnalyticsReader;
 import fabrice.analytics.CollectionUtils;
+import fabrice.app.GaHeader;
 import fabrice.exceptions.TechnicalException;
 
 import java.util.*;
@@ -15,13 +16,16 @@ public abstract class RowDefinition {
 	public static final int MAX_ID_SIZE = AnalyticsReader.GA_MAX_DIMENSIONS - 1;
 	private final SortedSet<String> idHeaders;
 	private final List<String> infoHeaders;
+	private final Set<String> headerToIgnoreInCsv;
 
-	public RowDefinition(String[] idHeaders, String[] infoHeaders) {
+	public RowDefinition(String[] idHeaders, String[] infoHeaders, String[] headerToIgnoreInCsv) {
         checkForGA_NT_MINUTE(idHeaders);
         CollectionUtils.checkNoDuplicates(idHeaders);
         CollectionUtils.checkNoDuplicates(infoHeaders);
+        CollectionUtils.checkNoDuplicates(headerToIgnoreInCsv);
 		this.idHeaders = new TreeSet<String>(Arrays.asList(idHeaders));
 		this.infoHeaders = Arrays.asList(infoHeaders);
+        this.headerToIgnoreInCsv = new HashSet<String>(Arrays.asList(headerToIgnoreInCsv));
 		if (idHeaders.length>= MAX_ID_SIZE) {
 			throw new TechnicalException(String.format("Impossible to instantiate a row definition id of size %s. Max is %s", idHeaders.length, MAX_ID_SIZE));
 		}
@@ -48,15 +52,15 @@ public abstract class RowDefinition {
 		return this.idHeaders.size();
 	}
 
-	public boolean isHeaderAllowedInCsv(GaData.ColumnHeaders header) {
-		return false;
-	}
-
 	public Collection<String> getIdHeaders() {
 		return idHeaders;
 	}
 
     public boolean isIdHeader(String header) {
         return this.idHeaders.contains(header);
+    }
+
+    public boolean outputHeaderForCsv(String header) {
+        return !headerToIgnoreInCsv.contains(header);
     }
 }

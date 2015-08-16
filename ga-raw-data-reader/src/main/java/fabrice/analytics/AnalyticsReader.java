@@ -55,7 +55,7 @@ public class AnalyticsReader {
 
 	public AnalyticsResults readAnalyticsResults(String[] dimensions, String dateStart, String dateEnd) {
 		RequestedDimensions requestedDimensions = new RequestedDimensions(rowDefinition, GA_MAX_DIMENSIONS, dimensions);
-		Iterator<String> partitionedDimensions = requestedDimensions.getPartitionedValidDimensions();
+		Iterator<String> partitionedDimensions = requestedDimensions.getPartitionedDimensions();
 		int i = 0;
 
         AnalyticsResults analyticsResults = new AnalyticsResults(requestedDimensions);

@@ -3,8 +3,10 @@ package fabrice.domain;
 import com.google.api.services.analytics.model.GaData;
 import com.google.common.base.Joiner;
 import fabrice.analytics.RequestedDimensions;
+import fabrice.app.GaHeader;
 import fabrice.csv.GlobalCsvColumnIndex;
 import fabrice.exceptions.InvalidRowException;
+import fabrice.exceptions.TechnicalException;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -17,7 +19,6 @@ public class AnalyticsRow {
 
     private LinkedHashMap<GaData.ColumnHeaders, String> columnValues;
     private RowDefinition rowDefinition;
-    private int sessionNumber;
     private Infos rowId;
 
     public static AnalyticsRow create(RequestedDimensions requestedDimensions, List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
@@ -34,25 +35,23 @@ public class AnalyticsRow {
     private void initialize(List<GaData.ColumnHeaders> columnHeaders, List<String> row, GlobalCsvColumnIndex globalCsvColumnIndex) throws InvalidRowException {
         this.columnValues = new LinkedHashMap<GaData.ColumnHeaders, String>();
         if (columnHeaders.size()!=row.size()) {
-            throw new InvalidRowException("Not the same : " + Joiner.on(",").join(columnHeaders) + " (col. headers), " + Joiner.on(",").join(row) + " (row)");
+            throw new TechnicalException("Not the same : " + Joiner.on(",").join(columnHeaders) + " (col. headers), " + Joiner.on(",").join(row) + " (row)");
         }
 
         RowIdCollector rowInformationCollector = rowDefinition.createRowInformationCollector();
         RowIdCollector rowIdCollector = rowDefinition.createRowIdCollector();
 
-        for (int i=1; i<columnHeaders.size(); i++) {
+        for (int i=0; i<columnHeaders.size(); i++) {
             GaData.ColumnHeaders header = columnHeaders.get(i);
             String value = row.get(i);
             rowInformationCollector.collect(header, value);
             rowIdCollector.collect(header, value);
-            if (rowDefinition.isHeaderAllowedInCsv(header)) {
+            if (rowDefinition.outputHeaderForCsv(header.getName())) {
                 globalCsvColumnIndex.newHeader(header);
                 this.columnValues.put(header, value);
             }
         }
 
-        Infos infos = rowInformationCollector.create();
-        sessionNumber = Integer.parseInt(infos.getHeaderValue(GaHeader.GA_SESSIONS));
         this.rowId = rowIdCollector.create();
     }
 
@@ -87,17 +86,13 @@ public class AnalyticsRow {
         return columnValues.keySet();
     }
 
-    public int getSessionNumber() {
-        return sessionNumber;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         sb.append("[");
         sb.append(String.format("id=%s, ", rowId));
-        sb.append(String.format("sessions nb=%s, ", sessionNumber));
+//        sb.append(String.format("sessions nb=%s, ", sessionNumber));
         sb.append("data=");
         sb.append("{");
         for (Map.Entry<GaData.ColumnHeaders, String> entry : this.columnValues.entrySet()) {

@@ -8,6 +8,7 @@ import fabrice.csv.CsvContent;
 import fabrice.csv.CsvUtils;
 import fabrice.csv.GlobalCsvColumnIndex;
 import fabrice.exceptions.InvalidRowException;
+import fabrice.exceptions.TechnicalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,7 @@ import java.util.*;
 public class AnalyticsResults {
 
     protected Logger logger;
-    private TreeMap<Infos, AnalyticsRow> rows;
+    private LinkedHashMap<Infos, AnalyticsRow> rows;
     private GlobalCsvColumnIndex globalCsvColumnIndex;
     private RequestedDimensions requestedDimensions;
 
@@ -27,52 +28,35 @@ public class AnalyticsResults {
         this.requestedDimensions = requestedDimensions;
         this.logger = LoggerFactory.getLogger(getClass());
         this.globalCsvColumnIndex = new GlobalCsvColumnIndex();
-        this.rows = new TreeMap<Infos, AnalyticsRow>();
+        this.rows = new LinkedHashMap<Infos, AnalyticsRow>();
     }
 
     public void addAllAbsent(GaData gaData) {
+        boolean idMustExist = !this.rows.isEmpty();
         for (List<String> row : gaData.getRows()) {
             AnalyticsRow analyticsRow = null;
             try {
                 analyticsRow = AnalyticsRow.create(requestedDimensions, gaData.getColumnHeaders(), row, globalCsvColumnIndex);
+                addRow(analyticsRow, idMustExist);
             } catch (InvalidRowException e) {
-                this.logger.debug(String.format("Impossible to construct row '%s'", row), e);
-                continue;
-            }
-            try {
-                addRow(analyticsRow);
-            } catch (InvalidRowException e) {
-                this.logger.debug(String.format("Impossible to add row '%s'", analyticsRow), e);
+                String rowStr = analyticsRow != null ? analyticsRow.toString() : row.toString();
+                this.logger.debug(String.format("Impossible to add row '%s'", rowStr), e);
                 continue;
             }
         }
     }
 
-    private void addRow(AnalyticsRow analyticsRow) throws InvalidRowException {
+    private void addRow(AnalyticsRow analyticsRow, boolean idMustExist) throws InvalidRowException {
         AnalyticsRow analyticsRowInMap = this.rows.get(analyticsRow.getId());
         if (analyticsRowInMap ==null) {
-            this.rows.put(analyticsRow.getId(), analyticsRow);
-        } else {
-            if (analyticsRow.getSessionNumber()!=analyticsRowInMap.getSessionNumber()) {
-                throw new InvalidRowException(
-                        String.format(
-                                "Cannot merge two rows with different session numbers. \nInitial row : %s\nNew row : %s",
-                                analyticsRowInMap,
-                                analyticsRow
-                        )
-                );
+            if (idMustExist) {
+                throw new TechnicalException(String.format("Unknown row id : %s", analyticsRow.getId()));
+            } else {
+                this.rows.put(analyticsRow.getId(), analyticsRow);
             }
+        } else {
             analyticsRowInMap.addAllAbsent(analyticsRow);
         }
-    }
-
-    public TreeMap<Infos, AnalyticsRow> getRows() {
-        return rows;
-    }
-
-
-    public Iterable<?> getHeaders() {
-        return null;
     }
 
     public CsvContent createCsvContent() {

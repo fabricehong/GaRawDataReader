@@ -1,5 +1,7 @@
 package fabrice.domain;
 
+import fabrice.app.GaHeader;
+
 import java.util.HashMap;
 import java.util.Map;
 

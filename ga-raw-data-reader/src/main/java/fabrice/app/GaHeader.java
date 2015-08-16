@@ -1,4 +1,4 @@
-package fabrice.domain;
+package fabrice.app;
 
 /**
  * @author Fabrice Hong -- Liip AG
@@ -6,6 +6,7 @@ package fabrice.domain;
  */
 public enum GaHeader {
 	GA_NTH_MINUTE("ga:nthMinute"),
+	GA_REGION("ga:region"),
 	GA_SESSIONS("ga:sessions");
 
 	private final String headerCode;

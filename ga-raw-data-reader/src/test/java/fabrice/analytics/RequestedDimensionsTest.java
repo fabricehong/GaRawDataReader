@@ -1,14 +1,11 @@
 package fabrice.analytics;
 
 import com.google.common.collect.Iterators;
-import fabrice.domain.GaHeader;
-import fabrice.domain.RowDefinition;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
+import fabrice.TestRowDefinition;
+import fabrice.app.GaHeader;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -43,7 +40,7 @@ public class RequestedDimensionsTest {
         RequestedDimensions requestedDimensions = new RequestedDimensions(testRowDefinition, MAX_DIMENSIONS_IN_REQUEST,
                 dimension1, dimension2
         );
-        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedValidDimensions();
+        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedDimensions();
         assertDimensions(partitionedValidDimensions,
                 new String[][]{
                         new String[]{
@@ -61,7 +58,7 @@ public class RequestedDimensionsTest {
         RequestedDimensions requestedDimensions = new RequestedDimensions(testRowDefinition, MAX_DIMENSIONS_IN_REQUEST,
                 dimension1, dimension2, dimension3
         );
-        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedValidDimensions();
+        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedDimensions();
         assertDimensions(partitionedValidDimensions,
                 new String[][]{
                     new String[]{
@@ -83,7 +80,7 @@ public class RequestedDimensionsTest {
         RequestedDimensions requestedDimensions = new RequestedDimensions(testRowDefinition, MAX_DIMENSIONS_IN_REQUEST,
                 dimension1, dimension2, ID_HEADER2, dimension3
         );
-        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedValidDimensions();
+        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedDimensions();
         assertDimensions(partitionedValidDimensions,
                 new String[][]{
                         new String[]{
@@ -105,7 +102,7 @@ public class RequestedDimensionsTest {
         RequestedDimensions requestedDimensions = new RequestedDimensions(testRowDefinition, MAX_DIMENSIONS_IN_REQUEST,
                 dimension1, dimension2, dimension3, ID_HEADER2
         );
-        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedValidDimensions();
+        Iterator<String> partitionedValidDimensions = requestedDimensions.getPartitionedDimensions();
         assertDimensions(partitionedValidDimensions,
                 new String[][]{
                         new String[]{
@@ -129,9 +126,3 @@ public class RequestedDimensionsTest {
     }
 }
 
-class TestRowDefinition extends RowDefinition {
-
-    public TestRowDefinition(String[] idHeaders, String[] infoHeaders) {
-        super(idHeaders, infoHeaders);
-    }
-}

@@ -36,12 +36,9 @@ public class RequestedDimensions {
 
 
 
-    public Iterator<String> getPartitionedValidDimensions() {
+    public Iterator<String> getPartitionedDimensions() {
 // - arrange id dimensions at the befinning of the columns, in a deterministric order
 // - detect duplicate dimension between id and asked dimension
-
-
-
         UnmodifiableIterator<List<String>> partition = Iterators.partition(dimensionsWithoutHeaders.iterator(), maxDimensionsInRequest - rowDefinition.getIdSize());
         Iterator<String> transform = Iterators.transform(partition, new Function<List<String>, String>() {
             @Nullable
