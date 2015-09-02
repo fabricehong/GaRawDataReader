@@ -12,6 +12,10 @@ public class RowDefinition1 extends RowDefinition {
 //			GaHeader.GA_REGION.getHeaderCode()
 	};
 
+	private static String[] headersToExcludeFromDimensionRequest = new String[]{
+			GaHeader.GA_SESSIONS.getHeaderCode()
+	};
+
 	private static String[] infoHeaders = new String[]{
 			GaHeader.GA_SESSIONS.getHeaderCode()
 	};
@@ -21,6 +25,6 @@ public class RowDefinition1 extends RowDefinition {
 	};
 
 	public RowDefinition1() {
-		super(idHeaders, infoHeaders, headerToIgnoreOnCsv);
+		super(idHeaders, infoHeaders, headerToIgnoreOnCsv, headersToExcludeFromDimensionRequest);
 	}
 }

@@ -1,5 +1,6 @@
 package fabrice.csv;
 
+import fabrice.domain.Statistics;
 import org.apache.commons.csv.CSVFormat;
 
 import java.io.IOException;
@@ -11,9 +12,11 @@ import java.io.Writer;
 public class GACsvPrinter {
 
     private CsvContent csvContent;
+    private Statistics statistics;
 
-    public GACsvPrinter(CsvContent csvContent) {
+    public GACsvPrinter(CsvContent csvContent, Statistics statistics) {
         this.csvContent = csvContent;
+        this.statistics = statistics;
     }
 
     public void write(Writer writer) throws IOException {
@@ -27,6 +30,7 @@ public class GACsvPrinter {
         csvPrinter.printRecord(csvContent.getHeaders());
         for (String[] row : csvContent.getLines()) {
             csvPrinter.printRecord(row);
+            statistics.incrementPrintedCsvLines();
         }
 
     }

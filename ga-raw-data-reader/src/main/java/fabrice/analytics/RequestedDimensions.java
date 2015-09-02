@@ -45,7 +45,7 @@ public class RequestedDimensions {
             @Override
             public String apply(@Nullable List<String> strings) {
                 ImmutableList.Builder<Object> builder = ImmutableList.builder();
-                for (String header : rowDefinition.getIdHeaders()) {
+                for (String header : rowDefinition.getMandatoryDimensionsToRequest()) {
                     builder.add(header);
                 }
                 ImmutableList<Object> list = builder.addAll(strings).build();

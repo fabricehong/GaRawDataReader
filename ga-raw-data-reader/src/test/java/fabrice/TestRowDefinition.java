@@ -8,10 +8,10 @@ import fabrice.domain.RowDefinition;
 public class TestRowDefinition extends RowDefinition {
 
     public TestRowDefinition(String[] idHeaders, String[] infoHeaders) {
-        this(idHeaders, infoHeaders, null);
+        this(idHeaders, infoHeaders, null, null);
     }
 
-    public TestRowDefinition(String[] idHeaders, String[] infoHeaders, String[] headerToIgnoreInCsv) {
-        super(idHeaders, infoHeaders, headerToIgnoreInCsv);
+    public TestRowDefinition(String[] idHeaders, String[] infoHeaders, String[] headerToIgnoreInCsv, String[] headersToExcludeFromDimensionRequest) {
+        super(idHeaders, infoHeaders, headerToIgnoreInCsv, headersToExcludeFromDimensionRequest);
     }
 }

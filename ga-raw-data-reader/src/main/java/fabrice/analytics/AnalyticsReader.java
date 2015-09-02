@@ -44,8 +44,10 @@ public class AnalyticsReader {
 	private Analytics analytics;
 	private String profileId;
     private RowDefinition rowDefinition;
+	private Statistics statistics;
 
-    public AnalyticsReader(String serviceAccountEmail, String secretKeyFileLocation) {
+	public AnalyticsReader(String serviceAccountEmail, String secretKeyFileLocation, Statistics statistics) {
+		this.statistics = statistics;
 		this.logger = LoggerFactory.getLogger(getClass());
         this.secretKeyFileLocation = secretKeyFileLocation;
         this.serviceAccountEmail = serviceAccountEmail;
@@ -59,7 +61,6 @@ public class AnalyticsReader {
 		Iterator<String> partitionedDimensions = requestedDimensions.getPartitionedDimensions();
 		int i = 0;
 
-        Statistics statistics = new Statistics();
         AnalyticsResults analyticsResults = new AnalyticsResults(requestedDimensions, statistics);
 		while (partitionedDimensions.hasNext()) {
 			String dimStr = partitionedDimensions.next();
@@ -70,7 +71,6 @@ public class AnalyticsReader {
             statistics.incrementGaRequestNb();
 		}
 
-        this.logger.info(statistics.toString());
 		return analyticsResults;
 	}
 

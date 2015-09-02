@@ -25,7 +25,8 @@ public class AnalyticsResultsTest {
     private String[] idHeaders = new String[]{"ga:nthMinute", "ga:sessions"};
     private String[] infoHeaders = new String[]{};
     private String[] headerToIgnoreInCsv = new String[]{"ga:sessions"};
-    private RowDefinition rowDefinition = new TestRowDefinition(idHeaders, infoHeaders, headerToIgnoreInCsv);
+    private String[] headersToExcludeFromDimensionRequest = new String[]{};
+    private RowDefinition rowDefinition = new TestRowDefinition(idHeaders, infoHeaders, headerToIgnoreInCsv, headersToExcludeFromDimensionRequest);
     private Statistics statistics = new Statistics();
 
     @Test
@@ -72,6 +73,52 @@ public class AnalyticsResultsTest {
 
         );
     }
+
+    @Test
+    public void testCrossRequestsBadMerges() throws Exception {
+        RequestedDimensions requestedDimensions = new RequestedDimensions(rowDefinition, 4);
+        AnalyticsResults analyticsResults = new AnalyticsResults(requestedDimensions, statistics);
+
+        GaData gaData1 = createData(new String[]{"ga:nthMinute", "dim1", "ga:sessions"},
+                new String[]{"1", "data1Users1", "3"},
+                new String[]{"1", "data1Users2", "4"}
+        );
+
+        GaData gaData2 = createData(new String[]{"ga:nthMinute", "dim2", "ga:sessions"},
+                new String[]{"1", "data2Users2", "3"}, // rien n'assure quand dans la request 2, les données ne soient en fait pas associées au user 2 pour un nombre de session 3
+                new String[]{"1", "data2Users1", "4"}
+        );
+
+        analyticsResults.addAllAbsent(gaData1);
+        analyticsResults.addAllAbsent(gaData2);
+
+        CsvContent csvContent = analyticsResults.createCsvContent();
+        assertCsvContentId(csvContent, new String[]{"ga:nthMinute", "dim1", "dim2"},
+                new String[]{"1", "data1Users1", "data2Users1"},
+                new String[]{"1", "data1Users2", "data2Users2"}
+
+        );
+    }
+
+	@Test
+	public void testInnerRequestsBadMerges() throws Exception {
+		// if the same request there is multiple time the same key, then remove the line completely because we know it will be invalid anyway
+
+		RequestedDimensions requestedDimensions = new RequestedDimensions(rowDefinition, 4);
+		AnalyticsResults analyticsResults = new AnalyticsResults(requestedDimensions, statistics);
+
+		GaData gaData1 = createData(new String[]{"ga:nthMinute", "dim1", "ga:sessions"},
+				new String[]{"1", "data1Users1", "3"},
+				new String[]{"1", "data1Users2", "3"}
+		);
+
+		analyticsResults.addAllAbsent(gaData1);
+
+		CsvContent csvContent = analyticsResults.createCsvContent();
+		assertCsvContentId(csvContent, new String[]{"ga:nthMinute", "dim1"}
+
+		);
+	}
 
     private void assertCsvContentId(CsvContent csvContent, String[] expectedHeaders, String[]... expectedLines) {
         ArrayList<String> headers = new ArrayList<String>(csvContent.getHeaders());
