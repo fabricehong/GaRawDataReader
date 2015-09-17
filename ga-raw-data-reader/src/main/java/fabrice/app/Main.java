@@ -19,10 +19,13 @@ import java.io.IOException;
  */
 public class Main {
     private final Logger logger;
-    static final String secretKeyFileLocation = "/home/fabrice/datamining/GaRawDataReader/client_secret.p12";
-    static final String serviceAccountEmail = "601649274311-dk5lfpjrng8d3kb9rtup4oavc4nv80mg@developer.gserviceaccount.com";
-
     private AnalyticsReader analyticsReader;
+
+    static final String serviceAccountEmail = "403956333252-1ffjiiemc69q8fbf820troj72b5p2vor@developer.gserviceaccount.com";   // liip account
+    static final String secretKeyFileLocation = "/media/Reservoir/Dropbox/machine learning/analytics analyzer/liip/machineLearningWeka-f629013b3332.p12"; // liip account
+
+//    static final String serviceAccountEmail = "601649274311-dk5lfpjrng8d3kb9rtup4oavc4nv80mg@developer.gserviceaccount.com"; // my account
+//    static final String secretKeyFileLocation = "/home/fabrice/datamining/GaRawDataReader/client_secret.p12"; // my account
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -44,14 +47,11 @@ public class Main {
         analyticsReader = new AnalyticsReader(serviceAccountEmail, secretKeyFileLocation, statistics);
         System.out.println("First Profile Id: " + analyticsReader.getProfileId());
         AnalyticsResults analyticsResults = analyticsReader.readAnalyticsResults(new String[]{
-                "ga:keyword",
-                "ga:sessionDurationBucket",
-                "ga:daysSinceLastSession",
-                "ga:userType",
-                "ga:country",
-                "ga:region",
-                "ga:operatingSystem"
-        }, "2012-01-01", "today");
+                //"ga:keyword",
+                //"ga:sessionDurationBucket",
+                //"ga:medium",
+                "sessions::condition::ga:medium"
+        }, "2012-01-01", "2013-01-01");
         saveResults(analyticsResults, "/home/fabrice/tmp/file1.csv", statistics);
         this.logger.info(statistics.toString());
     }

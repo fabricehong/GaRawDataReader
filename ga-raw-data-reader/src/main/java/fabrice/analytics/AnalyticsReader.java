@@ -15,6 +15,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import fabrice.app.RowDefinition1;
+import fabrice.app.RowDefinition2;
 import fabrice.domain.AnalyticsResults;
 import fabrice.domain.RowDefinition;
 import fabrice.domain.Statistics;
@@ -32,8 +33,9 @@ import java.util.List;
 public class AnalyticsReader {
 	public static final String GA_NTH_MINUTE_HEADER = "ga:nthMinute";
 
-	public static final RowDefinition1 ROW_DEFINITION = new RowDefinition1();
+	public static final RowDefinition ROW_DEFINITION = new RowDefinition2();
 	public static final int GA_MAX_DIMENSIONS = 7;
+	public static final int MAX_RESULTS = 6000;
 
 	protected Logger logger;
 
@@ -112,6 +114,9 @@ public class AnalyticsReader {
 					.get("ga:" + profileId, dateStart, dateEnd, "ga:sessions");
 
 			today.setDimensions(dimensions);
+			today.setMaxResults(MAX_RESULTS);
+			//today.setSamplingLevel("FASTER");
+			//today.setFilters("ga:eventCategory==outbound link");
 			this.logger.info(String.format("getting data (max 7 dimensions) for dimensions : %s", today.getDimensions()));
 			return executeRequest(today);
 		} catch (IOException e) {
